@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: mongo_pr_container
+    restart: always
+    ports:
+      - '27018:27017'
+    command: --replSet mongo-set
+  mongo-secondary:
+    image: mongo:6.0
+    container_name: mongo_se_container
+    restart: always
+    ports:
+      - '30001:27017'
+    command: --replSet mongo-set
+  mongo-arbiter:
+    image: mongo:6.0
+    container_name: mongo_ar_container
+    restart: always
+    ports:
+      - '30002:27017'
+    command: --replSet mongo-set
+
+  opensearch:
+    build:
+      context: ./docker/opensearch
+    container_name: opensearch_container
+    environment:
+      - cluster.name=docker-cluster
+      - node.name=os-node
+      - cluster.initial_master_nodes=os-node
+      - bootstrap.memory_lock=true
+      - http.host=0.0.0.0
+      - transport.host=127.0.0.1
+      - 'OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m'
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - '9200:9200'
